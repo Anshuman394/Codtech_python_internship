@@ -1,0 +1,45 @@
+mport requests
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+
+# ========== CONFIG ==========
+API_KEY = 'ce5987bf6d65de9f02ca51da3966091a'  # Replace this
+CITY = 'DELHI'
+NUM_DAYS = 5  # Forecast for 5 days
+# =============================
+
+# API URL
+url = f"http://api.openweathermap.org/data/2.5/forecast?q={CITY}&appid={API_KEY}&units=metric"
+
+# Fetch data
+response = requests.get(url)
+data = response.json()
+
+# Parse data
+dates = []
+temps = []
+humidity = []
+
+for entry in data['list']:
+    dt_txt = entry['dt_txt']
+    temp = entry['main']['temp']
+    hum = entry['main']['humidity']
+
+    dates.append(datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S"))
+    temps.append(temp)
+    humidity.append(hum)
+
+# ========== PLOT ==========
+sns.set(style="darkgrid")
+
+plt.figure(figsize=(14, 6))
+plt.plot(dates, temps, label='Temperature (°C)', color='orange')
+plt.plot(dates, humidity, label='Humidity (%)', color='blue')
+plt.title(f"Weather Forecast for {CITY} (Next {NUM_DAYS} Days)")
+plt.xlabel("Date & Time")
+plt.ylabel("Value")
+plt.legend()
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
