@@ -1,0 +1,67 @@
+import csv
+from fpdf import FPDF
+
+# Step 1: Read data from CSV
+def read_data(filename):
+    data = []
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            row['Score'] = int(row['Score'])
+            data.append(row)
+    return data
+
+# Step 2: Analyze data
+def analyze_data(data):
+    total = len(data)
+    average = sum(d['Score'] for d in data) / total
+    highest = max(data, key=lambda x: x['Score'])
+    lowest = min(data, key=lambda x: x['Score'])
+    return {
+        "total": total,
+        "average": average,
+        "highest": highest,
+        "lowest": lowest
+    }
+
+# Step 3: Generate PDF report
+def generate_pdf_report(data, analysis, filename='report.pdf'):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    # Title
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt="Student Score Report", ln=1, align='C')
+
+    # Summary
+    pdf.set_font("Arial", size=12)
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Total Students: {analysis['total']}", ln=1)
+    pdf.cell(200, 10, txt=f"Average Score: {analysis['average']:.2f}", ln=1)
+    pdf.cell(200, 10, txt=f"Highest Score: {analysis['highest']['Name']} - {analysis['highest']['Score']}", ln=1)
+    pdf.cell(200, 10, txt=f"Lowest Score: {analysis['lowest']['Name']} - {analysis['lowest']['Score']}", ln=1)
+
+    # Table header
+    pdf.ln(10)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(90, 10, "Name", 1)
+    pdf.cell(40, 10, "Score", 1)
+    pdf.ln()
+
+    # Table data
+    pdf.set_font("Arial", size=12)
+    for row in data:
+        pdf.cell(90, 10, row['Name'], 1)
+        pdf.cell(40, 10, str(row['Score']), 1)
+        pdf.ln()
+
+    # Save PDF
+    pdf.output(filename)
+    print(f"Report generated: {filename}")
+
+# --- Main Execution ---
+if __name__ == "__main__":
+    data = read_data("data.csv")
+    analysis = analyze_data(data)
+    generate_pdf_report(data, analysis)
