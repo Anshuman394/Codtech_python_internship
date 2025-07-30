@@ -1,0 +1,69 @@
+import nltk
+import random
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Download NLTK data files (run once)
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('wordnet')
+nltk.download('stopwords')
+
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# Sample dataset: you can replace or expand this
+faq_pairs = {
+    "What is your name?": "I am a chatbot created using NLTK.",
+    "How can you help me?": "I can answer your basic questions.",
+    "What is AI?": "AI stands for Artificial Intelligence.",
+    "Who developed you?": "I was developed as a project for CodTech Internship.",
+    "How are you?": "I'm functioning as expected. How can I assist you?"
+}
+
+# Preprocessing function
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+def preprocess(text):
+    tokens = nltk.word_tokenize(text.lower())
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in string.punctuation and word not in stop_words]
+    return " ".join(tokens)
+
+# Prepare data
+questions = list(faq_pairs.keys())
+answers = list(faq_pairs.values())
+preprocessed_questions = [preprocess(q) for q in questions]
+
+# Vectorizer
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(preprocessed_questions)
+
+# Chatbot response
+def get_response(user_input):
+    user_input_clean = preprocess(user_input)
+    user_vec = vectorizer.transform([user_input_clean])
+    similarities = cosine_similarity(user_vec, X)
+    index = similarities.argmax()
+    score = similarities[0][index]
+
+    if score > 0.3:
+        return answers[index]
+    else:
+        return "I'm sorry, I didn't understand that. Can you rephrase?"
+
+# Main chat loop
+def chat():
+    print("Bot: Hello! Ask me anything. Type 'exit' to end.")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() in ['exit', 'bye', 'quit']:
+            print("Bot: Goodbye! Have a great day.")
+            break
+        response = get_response(user_input)
+        print("Bot:", response)
+
+# Run the chatbot
+if __name__ == "__main__":
+    chat()
